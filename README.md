@@ -30,7 +30,7 @@ pip install -r requirements.txt
 4. Start VirtualJournal:
 
 ```
-python virtual_journal.py
+python main.py
 ```
 
 5. Follow the on-screen instructions to create journal entries using text-to-speech and AI assistance.

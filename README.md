@@ -1,6 +1,6 @@
 # VirtualJournal
 
-VirtualJournal is a journaling application that combines text-to-speech and AI assistance to create seamless journal entries. This makes use of the GPT-4 Engine and can be used with your OpenAI API key.
+VirtualJournal is a journaling application that combines text-to-speech and AI assistance to create seamless journal entries. This makes use of the GPT-4 Engine and can be used with your OpenAI API key. Please make a file in your directory called credentials.txt with your API key.
 
 ## Description
 

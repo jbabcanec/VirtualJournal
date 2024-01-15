@@ -1,7 +1,8 @@
 # mic_check.py
 
-from PyQt5.QtWidgets import QMainWindow, QListWidget, QPushButton, QVBoxLayout, QWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QListWidget, QPushButton, QVBoxLayout, QWidget, QApplication, QLabel
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 import pyaudio
 
 class MicCheckWindow(QMainWindow):
@@ -14,8 +15,16 @@ class MicCheckWindow(QMainWindow):
         self.setWindowTitle("Microphone Check")
         self.resize(350, 200)  # Set window size
 
+        # Set the window icon
+        self.setWindowIcon(QIcon('logo.ico'))
+
         # Create layout and widgets
         layout = QVBoxLayout()
+
+        # Create and add a label above the list
+        self.label = QLabel("Please select audio input device")
+        layout.addWidget(self.label)
+
         self.micList = QListWidget()
         self.populate_mics()
         layout.addWidget(self.micList)

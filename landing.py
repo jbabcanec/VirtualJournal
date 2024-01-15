@@ -1,26 +1,29 @@
 # landing.py
 
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QComboBox, QCheckBox, QLabel, QDesktopWidget
-from PyQt5.QtGui import QMovie
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QComboBox, QCheckBox, QLabel, QDesktopWidget, QMessageBox
+from PyQt5.QtGui import QMovie, QIcon
 from PyQt5.QtCore import QSize, QTimer, QTime, pyqtSignal
 from record import ChunkedSpeechRecorder
 import threading
 
 class LandingPage(QMainWindow):
-    transcriptionCompleted = pyqtSignal(str)
+    proceedWithRecording = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
+
+        self.speech_recorder = ChunkedSpeechRecorder()
         self.initUI()
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.timeElapsed = QTime(0, 0, 0)
-        self.speech_recorder = ChunkedSpeechRecorder()
-
 
     def initUI(self):
         self.setWindowTitle("Voice to Text Journal")
         self.setGeometry(100, 100, 400, 300)  # x, y, width, height
+
+        # Set the window icon
+        self.setWindowIcon(QIcon('logo.ico'))
 
         # # Set the background color of the window to white
         # self.setStyleSheet("background-color: white;")
@@ -30,6 +33,10 @@ class LandingPage(QMainWindow):
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
+
+        # Connect signals to slots
+        self.speech_recorder.recording_successful.connect(self.on_recording_successful)
+        self.speech_recorder.recording_error.connect(self.on_recording_error)
 
         # Start Recording Button
         self.startButton = QPushButton("Start Recording", self)
@@ -60,6 +67,9 @@ class LandingPage(QMainWindow):
         self.autoCorrectionCheckBox = QCheckBox("Enable AI Correction", self)
         self.autoCorrectionCheckBox.setGeometry(50, 250, 150, 30)  # x, y, width, height
 
+        # Set the checkbox to be checked by default
+        self.autoCorrectionCheckBox.setChecked(True)
+
     def updateTimer(self):
         self.timeElapsed = self.timeElapsed.addMSecs(1)
         self.timerLabel.setText(self.timeElapsed.toString("hh:mm:ss.zzz"))
@@ -67,6 +77,7 @@ class LandingPage(QMainWindow):
     def toggleRecording(self):
         if not self.soundWaveAnimation.isVisible():
             # Start recording UI updates
+            self.startButton.setText("Stop Recording")  # Change button text to 'Stop Recording'
             self.soundWaveAnimation.show()
             self.soundWaveMovie.start()
             self.timerLabel.show()
@@ -81,20 +92,41 @@ class LandingPage(QMainWindow):
             audio_processing_thread.start()
         else:
             # Stop recording and processing
+            self.startButton.setText("Start Recording")  # Change button text back to 'Start Recording'
             self.speech_recorder.stop_recording()
 
-            # Retrieve and emit the recognized text
+            # Retrieve the recognized text
             recognized_text = self.speech_recorder.get_recognized_text()
-            self.transcriptionCompleted.emit(recognized_text)
-
-            # Stop recording UI updates
-            self.soundWaveAnimation.hide()
-            self.soundWaveMovie.stop()
-            self.timer.stop()
-            self.timerLabel.hide()
             print("Recording stopped...")
-
+            
     def process_audio_chunks(self):
         # Process each audio chunk
         self.speech_recorder.process_audio_chunk()
 
+    def on_recording_successful(self, recognized_text):
+        # Stop recording UI updates (moved from toggleRecording)
+        self.soundWaveAnimation.hide()
+        self.soundWaveMovie.stop()
+        self.timer.stop()
+        self.timerLabel.hide()
+
+        reply = QMessageBox.question(self, 'Recording', 'Continue with recording?',
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            self.proceedWithRecording.emit(recognized_text)  # Emit the signal with the recorded text
+        else:
+            self.resetUI()  # Reset the UI if the user chooses not to continue
+
+    def on_recording_error(self):
+        # Reset UI without showing any dialog and ensure no further action is taken
+        self.resetUI()
+
+    def resetUI(self):
+        # Implement the method to reset UI components if needed
+        # For example, resetting the startButton text, hiding animations, etc.
+        self.startButton.setText("Start Recording")
+        self.soundWaveAnimation.hide()
+        self.soundWaveMovie.stop()
+        self.timer.stop()
+        self.timerLabel.hide()
+        # Reset any other UI components as needed

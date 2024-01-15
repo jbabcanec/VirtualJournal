@@ -3,9 +3,14 @@
 import pyaudio
 import speech_recognition as sr
 import queue
+from PyQt5.QtCore import QObject, pyqtSignal
 
-class ChunkedSpeechRecorder:
+class ChunkedSpeechRecorder(QObject):
+    recording_successful = pyqtSignal(str)  # Signal for successful recording
+    recording_error = pyqtSignal()  # Signal for recording errors
+
     def __init__(self, chunk_size=1024, format=pyaudio.paInt16, channels=1, rate=16000, buffer_duration=30):
+        super(ChunkedSpeechRecorder, self).__init__()  # Correct initialization of QObject
         self.chunk_size = chunk_size
         self.format = format
         self.channels = channels
@@ -19,7 +24,7 @@ class ChunkedSpeechRecorder:
         )
         self.queue = queue.Queue()
         self.is_recording = False
-        self.buffer = b""  # Define buffer as an instance attribute
+        self.buffer = b""
         self.recognized_text = []  # List to store recognized text
 
     def callback(self, in_data, frame_count, time_info, status):
@@ -59,10 +64,13 @@ class ChunkedSpeechRecorder:
             audio_data = sr.AudioData(buffer, self.rate, self.audio_interface.get_sample_size(self.format))
             text = recognizer.recognize_google(audio_data)
             self.recognized_text.append(text)  # Store recognized text
+            self.recording_successful.emit(text)  # Emit only on successful recognition
         except sr.UnknownValueError:
             print("Audio not understood")
+            self.recording_error.emit()  # Emit error signal
         except sr.RequestError as e:
             print(f"Speech recognition error; {e}")
+            self.recording_error.emit()  # Emit error signal
 
     def get_recognized_text(self):
         return ' '.join(self.recognized_text)

@@ -2,9 +2,14 @@
 
 import sys
 from PyQt5.QtWidgets import QApplication
+
 from landing import LandingPage
-from show import TextEditor  # Assuming TextEditor is a class in show.py that handles text display
-from mic_check import MicCheckWindow  # Import the MicCheckWindow class
+from show import TextEditor
+from mic_check import MicCheckWindow
+from correct import correct_text, read_api_key
+
+# Declare editor as a global variable
+global editor
 
 def main():
     app = QApplication(sys.argv)
@@ -18,15 +23,27 @@ def main():
         return  # Exit the application if 'Cancel' was clicked
 
     # Show the landing page if 'OK' is clicked in the mic check window
+    global landing
     landing = LandingPage()
-    landing.transcriptionCompleted.connect(open_text_editor)
+    landing.proceedWithRecording.connect(lambda text: open_text_editor(text, landing))
     landing.show()
-    sys.exit(app.exec_())
+    app.exec_()
 
-def open_text_editor(recognized_text):
-    editor = TextEditor(recognized_text)
+def open_text_editor(recognized_text, landing_page):
+    global editor
+
+    api_key = read_api_key()
+    if api_key is None:
+        print("API key not found. Unable to perform AI correction.")
+        corrected_text = recognized_text  # Use the original text if API key is missing
+    elif landing_page.autoCorrectionCheckBox.isChecked():
+        corrected_text = correct_text(recognized_text, api_key)
+    else:
+        corrected_text = recognized_text
+
+    editor = TextEditor(corrected_text)
     editor.show()
+    landing_page.close()  # Close the LandingPage window
 
 if __name__ == "__main__":
     main()
-

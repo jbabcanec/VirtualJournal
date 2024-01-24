@@ -1,16 +1,29 @@
-from PyQt5.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout, QDesktopWidget, QFrame, QHBoxLayout, QWidget, QAction, QToolBar, QToolButton
+# show.py
+
+from PyQt5.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout, QDesktopWidget, QFrame, QHBoxLayout, QWidget, QAction, QToolBar, QToolButton, QDockWidget, QPushButton
 from PyQt5.QtGui import QIcon, QPainter, QPen, QPixmap, QColor
 from PyQt5.QtCore import Qt, QSize
+
+from utils.zoom import ZoomControl
+from utils.re_record import RecordControl
+from utils.reconcile import ReconcileControl
+
 
 class TextEditor(QMainWindow):
     def __init__(self, text):
         super().__init__()
         self.setWindowTitle("Text Editor")
-        self.setGeometry(100, 100, 1000, 800)  # Adjust the size of the main window
+        self.setGeometry(100, 100, 1000, 800)
+        self.setWindowIcon(QIcon('logo.ico'))
+
+        # Initialize UI components
         self.initUI(text)
 
-        # Set the window icon
-        self.setWindowIcon(QIcon('logo.ico'))
+        # Initialize ZoomControl and create dock widgets
+        self.zoom_control = ZoomControl(self)
+        self.record_control = RecordControl(self)
+        self.reconcile_control = ReconcileControl(self)
+        self.initDockWidgets()
 
     def initUI(self, text):
         # Main layout for QMainWindow
@@ -78,6 +91,48 @@ class TextEditor(QMainWindow):
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
 
+    def initDockWidgets(self):
+        # Create a dock widget for various tools
+        toolsDock = QDockWidget("Tools", self)
+        toolsDock.setAllowedAreas(Qt.RightDockWidgetArea)
+        toolsDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
+
+        # Create a layout for the tools
+        toolsLayout = QVBoxLayout()
+
+        # Add a stretch factor at the top to push everything down
+        toolsLayout.addStretch()
+
+        # Add zoom controls to the tools layout
+        zoomControls = self.zoom_control.create_controls()
+        toolsLayout.addWidget(zoomControls)
+
+        # Add record controls to the tools layout
+        recordControls = self.record_control.create_controls()
+        toolsLayout.addWidget(recordControls)
+
+        # Add reconcile controls to the tools layout
+        reconcileControls = self.reconcile_control.create_controls()
+        toolsLayout.addWidget(reconcileControls)
+
+        # Add a stretch factor at the bottom to push everything up
+        toolsLayout.addStretch()
+
+        # Create a container widget and set the layout
+        containerWidget = QWidget()
+        containerWidget.setLayout(toolsLayout)
+        containerWidget.setStyleSheet("QWidget { background: white; }")
+
+        toolsDock.setWidget(containerWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, toolsDock)
+
+    def adjustZoom(self, change):
+        self.zoomLevel += change
+        self.zoomLevel = max(10, min(self.zoomLevel, 200))  # Ensure zoom level stays within bounds
+        font = self.text_edit.font()
+        font.setPointSize(int(self.zoomLevel / 10))
+        self.text_edit.setFont(font)
+
     def setBackground(self):
         # Create a pixmap with a dotted pattern
         pixmap = QPixmap(20, 20)
@@ -98,13 +153,12 @@ class TextEditor(QMainWindow):
         # Set the pixmap as the background
         self.setStyleSheet(f"QMainWindow {{ background-image: url({background_image_path}); }}")
 
-
 # Example usage
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
-    editor = TextEditor("test")
+    editor = TextEditor("i really wish i had a penguin named jim")
     editor.show()
     sys.exit(app.exec_())

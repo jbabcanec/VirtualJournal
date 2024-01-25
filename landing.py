@@ -23,7 +23,7 @@ class LandingPage(QMainWindow):
         self.setGeometry(100, 100, 400, 300)  # x, y, width, height
 
         # Set the window icon
-        self.setWindowIcon(QIcon('logo.ico'))
+        self.setWindowIcon(QIcon('icons/logo.ico'))
 
         # # Set the background color of the window to white
         # self.setStyleSheet("background-color: white;")
@@ -51,7 +51,7 @@ class LandingPage(QMainWindow):
         # Sound Wave Animation (Initially hidden, adjusted position and size)
         self.soundWaveAnimation = QLabel(self)
         self.soundWaveAnimation.setGeometry(150, 50, 100, 40)  # x, y, width, height
-        self.soundWaveMovie = QMovie("waves.gif")  # Placeholder animation
+        self.soundWaveMovie = QMovie("icons/waves.gif")  # Placeholder animation
         self.soundWaveMovie.setScaledSize(QSize(100, 40))  # Scaling the movie to fit label size
         self.soundWaveAnimation.setMovie(self.soundWaveMovie)
         self.soundWaveAnimation.hide()

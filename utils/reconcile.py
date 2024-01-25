@@ -1,6 +1,6 @@
 # utils/reconcile.py
 
-from PyQt5.QtWidgets import QPushButton, QMessageBox, QDialog, QVBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QPushButton, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QTextEdit
 import openai
 from correct import read_api_key, correct_text
 
@@ -8,29 +8,37 @@ class CorrectionDialog(QDialog):
     def __init__(self, original_text, corrected_text, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Suggested Correction")
-        self.setGeometry(300, 300, 600, 400)
+        self.setGeometry(300, 300, 800, 400)  # Adjust size as needed
         self.original_text = original_text
         self.corrected_text = corrected_text
 
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout()
+        comparison_layout = QHBoxLayout()
 
-        self.text_edit = QTextEdit()
-        self.text_edit.setText(self.corrected_text)
-        layout.addWidget(self.text_edit)
+        self.original_text_edit = QTextEdit()
+        self.original_text_edit.setText(self.original_text)
+        self.original_text_edit.setReadOnly(True)  # Make original text read-only
+        comparison_layout.addWidget(self.original_text_edit)
+
+        self.corrected_text_edit = QTextEdit()
+        self.corrected_text_edit.setText(self.corrected_text)
+        comparison_layout.addWidget(self.corrected_text_edit)
+
+        main_layout.addLayout(comparison_layout)
 
         accept_button = QPushButton("Accept Correction")
         accept_button.clicked.connect(self.accept_correction)
-        layout.addWidget(accept_button)
+        main_layout.addWidget(accept_button)
 
         reject_button = QPushButton("Reject Correction")
         reject_button.clicked.connect(self.reject_correction)
-        layout.addWidget(reject_button)
+        main_layout.addWidget(reject_button)
 
-        self.setLayout(layout)
+        self.setLayout(main_layout)
 
     def accept_correction(self):
         cursor = self.parent().text_edit.textCursor()
-        cursor.insertText(self.corrected_text)  # Replace selected text with correction
+        cursor.insertText(self.corrected_text_edit.toPlainText())  # Replace selected text with correction
         self.accept()
 
     def reject_correction(self):

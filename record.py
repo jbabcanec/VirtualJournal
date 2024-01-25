@@ -64,6 +64,10 @@ class ChunkedSpeechRecorder(QObject):
         if self.buffer:
             self.process_buffer(self.buffer, sr.Recognizer())
             self.buffer = b""  # Reset buffer after processing
+        # Emit signal after all audio has been processed
+        if self.recognized_text:
+            full_text = ' '.join(self.recognized_text)
+            self.recording_successful.emit(full_text)  # Emit with the full text
 
     def process_buffer(self, buffer, recognizer):
         print("Processing buffer")
@@ -71,7 +75,7 @@ class ChunkedSpeechRecorder(QObject):
             audio_data = sr.AudioData(buffer, self.rate, self.audio_interface.get_sample_size(self.format))
             text = recognizer.recognize_google(audio_data)
             self.recognized_text.append(text)  # Store recognized text
-            self.recording_successful.emit(text)  # Emit only on successful recognition
+            # Moved the signal emission to process_remaining_audio method
         except sr.UnknownValueError:
             print("Audio not understood")
             self.recording_error.emit()  # Emit error signal

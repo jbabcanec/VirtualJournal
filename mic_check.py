@@ -16,7 +16,7 @@ class MicCheckWindow(QMainWindow):
         self.resize(350, 200)  # Set window size
 
         # Set the window icon
-        self.setWindowIcon(QIcon('logo.ico'))
+        self.setWindowIcon(QIcon('icons/logo.ico'))
 
         # Create layout and widgets
         layout = QVBoxLayout()

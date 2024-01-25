@@ -4,9 +4,18 @@ from PyQt5.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout, QDesktopWidget,
 from PyQt5.QtGui import QIcon, QPainter, QPen, QPixmap, QColor
 from PyQt5.QtCore import Qt, QSize
 
+# Import utils functionalities
 from utils.zoom import ZoomControl
 from utils.re_record import RecordControl
 from utils.reconcile import ReconcileControl
+from utils.text_edit import TextEditTools
+
+# Import ribbon functionalities
+from ribbon.file import FileFunctions
+from ribbon.edit import EditFunctions
+from ribbon.options import OptionsFunctions
+from ribbon.tools import ToolsFunctions
+from ribbon.view import ViewFunctions
 
 
 class TextEditor(QMainWindow):
@@ -14,7 +23,7 @@ class TextEditor(QMainWindow):
         super().__init__()
         self.setWindowTitle("Text Editor")
         self.setGeometry(100, 100, 1000, 800)
-        self.setWindowIcon(QIcon('logo.ico'))
+        self.setWindowIcon(QIcon('icons/logo.ico'))
 
         # Initialize UI components
         self.initUI(text)
@@ -23,6 +32,7 @@ class TextEditor(QMainWindow):
         self.zoom_control = ZoomControl(self)
         self.record_control = RecordControl(self)
         self.reconcile_control = ReconcileControl(self)
+
         self.initDockWidgets()
 
     def initUI(self, text):
@@ -32,42 +42,12 @@ class TextEditor(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
-        # Create a toolbar for file, edit, view, tools, and options
-        toolbar = QToolBar("Main Toolbar")
-        toolbar.setStyleSheet("background-color: white;")
-
-        def create_tool_button(icon, text):
-            button = QToolButton()
-            button.setIcon(QIcon(icon))
-            # button.setIconSize(icon_size)  # Remove this line
-            button.setText(text)
-            button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)  # Display text under the icon
-            button.setStyleSheet("color: black;")
-            return button
-
-        file_button = create_tool_button('file.png', 'File')
-        edit_button = create_tool_button('edit.png', 'Edit')
-        view_button = create_tool_button('view.png', 'View')
-        tools_button = create_tool_button('tools.png', 'Tools')
-        options_button = create_tool_button('options.png', 'Options')
-
-        toolbar.addWidget(file_button)
-        toolbar.addWidget(edit_button)
-        toolbar.addWidget(view_button)
-        toolbar.addWidget(tools_button)
-        toolbar.addWidget(options_button)
-
-        self.addToolBar(toolbar)
-
         # Create a frame to represent the paper
         paper_frame = QFrame()
-        paper_frame.setStyleSheet("background-color: white; border: 1px solid lightgray; border-radius: 5px;")  # Subtle border added
-
-        # Calculate the size of the frame to resemble 8.5 x 11 paper
+        paper_frame.setStyleSheet("background-color: white; border: 1px solid lightgray; border-radius: 5px;")
         paper_width = int(self.width() * 0.5)  # 50% of the main window width
         paper_height = int(paper_width * 1.2941)  # 8.5 x 11 ratio
         paper_frame.setFixedSize(paper_width, paper_height)
-
         paper_frame_layout = QVBoxLayout(paper_frame)
         paper_frame_layout.setContentsMargins(20, 20, 20, 20)
 
@@ -77,6 +57,18 @@ class TextEditor(QMainWindow):
         self.text_edit.setReadOnly(False)
         paper_frame_layout.addWidget(self.text_edit)
 
+        # Create a toolbar
+        toolbar = QToolBar("Main Toolbar")
+        toolbar.setStyleSheet("background-color: white;")
+        self.addToolBar(toolbar)
+
+        # Initialize FileFunctions with toolbar and text_edit
+        self.file_functions = FileFunctions(toolbar, self.text_edit)
+        self.edit_functions = EditFunctions(toolbar, self.text_edit)
+        self.options_functions = OptionsFunctions(toolbar, self.text_edit)
+        self.tools_functions = ToolsFunctions(toolbar, self.text_edit)
+        self.view_functions = ViewFunctions(toolbar, self.text_edit)
+
         # Add the paper frame to the main layout, centered
         main_layout.addStretch()
         main_layout.addWidget(paper_frame)
@@ -85,46 +77,68 @@ class TextEditor(QMainWindow):
         # Set a dotted background
         self.setBackground()
 
-        # Center the window on the screen
+        # Additional UI settings (centering, etc.)
         qtRectangle = self.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
 
     def initDockWidgets(self):
-        # Create a dock widget for various tools
-        toolsDock = QDockWidget("Tools", self)
-        toolsDock.setAllowedAreas(Qt.RightDockWidgetArea)
-        toolsDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
+        # --------------------------------------------------------
+        # Right Dock Widget for Zoom, Record, and Reconcile Controls
+        # --------------------------------------------------------
+        rightDock = QDockWidget("Right Tools", self)
+        rightDock.setAllowedAreas(Qt.RightDockWidgetArea)
+        rightDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
 
-        # Create a layout for the tools
-        toolsLayout = QVBoxLayout()
+        # Layout for the right dock tools
+        rightToolsLayout = QVBoxLayout()
 
-        # Add a stretch factor at the top to push everything down
-        toolsLayout.addStretch()
+        # Add a stretch factor at the top
+        rightToolsLayout.addStretch()
 
-        # Add zoom controls to the tools layout
+        # Add zoom controls to the right tools layout
         zoomControls = self.zoom_control.create_controls()
-        toolsLayout.addWidget(zoomControls)
+        rightToolsLayout.addWidget(zoomControls)
 
-        # Add record controls to the tools layout
+        # Add record controls to the right tools layout
         recordControls = self.record_control.create_controls()
-        toolsLayout.addWidget(recordControls)
+        rightToolsLayout.addWidget(recordControls)
 
-        # Add reconcile controls to the tools layout
+        # Add reconcile controls to the right tools layout
         reconcileControls = self.reconcile_control.create_controls()
-        toolsLayout.addWidget(reconcileControls)
+        rightToolsLayout.addWidget(reconcileControls)
 
-        # Add a stretch factor at the bottom to push everything up
-        toolsLayout.addStretch()
+        # Add a stretch factor at the bottom
+        rightToolsLayout.addStretch()
 
-        # Create a container widget and set the layout
-        containerWidget = QWidget()
-        containerWidget.setLayout(toolsLayout)
-        containerWidget.setStyleSheet("QWidget { background: white; }")
+        # Container widget for the right dock tools
+        rightContainerWidget = QWidget()
+        rightContainerWidget.setLayout(rightToolsLayout)
+        rightContainerWidget.setStyleSheet("QWidget { background: white; }")
 
-        toolsDock.setWidget(containerWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, toolsDock)
+        rightDock.setWidget(rightContainerWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, rightDock)
+
+        # --------------------------------------------------------
+        # Left Dock Widget for Text Editing Tools
+        # --------------------------------------------------------
+        leftDock = QDockWidget("Text Editing Tools", self)
+        leftDock.setAllowedAreas(Qt.LeftDockWidgetArea)
+        leftDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
+
+        # Initialize TextEditTools with text_edit
+        self.text_edit_tools = TextEditTools(self.text_edit)
+
+        # Use the create_controls method to get the controls for the left dock
+        textEditControls = self.text_edit_tools.create_controls()
+
+        # Ensure the container widget has the same style as the right dock
+        textEditControls.setStyleSheet("QWidget { background: white; }")
+
+        # Set the controls to the left dock widget
+        leftDock.setWidget(textEditControls)
+        self.addDockWidget(Qt.LeftDockWidgetArea, leftDock)
 
     def adjustZoom(self, change):
         self.zoomLevel += change
@@ -146,13 +160,13 @@ class TextEditor(QMainWindow):
                 painter.drawPoint(x, y)
         painter.end()
 
-        # Save the pixmap as an image file
-        background_image_path = "background.png"
+        # Save the pixmap as an image file in the 'icons' directory
+        background_image_path = "icons/background.png"
         pixmap.save(background_image_path)
 
         # Set the pixmap as the background
         self.setStyleSheet(f"QMainWindow {{ background-image: url({background_image_path}); }}")
-
+        
 # Example usage
 if __name__ == "__main__":
     import sys

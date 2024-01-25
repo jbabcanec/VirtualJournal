@@ -1,7 +1,7 @@
 # show.py
 
-from PyQt5.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout, QDesktopWidget, QFrame, QHBoxLayout, QWidget, QAction, QToolBar, QToolButton, QDockWidget, QPushButton
-from PyQt5.QtGui import QIcon, QPainter, QPen, QPixmap, QColor
+from PyQt5.QtWidgets import QMainWindow, QTextEdit, QVBoxLayout, QDesktopWidget, QFrame, QHBoxLayout, QWidget, QAction, QToolBar, QToolButton, QDockWidget, QPushButton, QMessageBox
+from PyQt5.QtGui import QIcon, QPainter, QPen, QPixmap, QColor, QCloseEvent  # Corrected import
 from PyQt5.QtCore import Qt, QSize
 
 # Import utils functionalities
@@ -19,14 +19,16 @@ from ribbon.view import ViewFunctions
 
 
 class TextEditor(QMainWindow):
-    def __init__(self, text):
+    def __init__(self, text, file_format):
         super().__init__()
         self.setWindowTitle("Text Editor")
         self.setGeometry(100, 100, 1000, 800)
         self.setWindowIcon(QIcon('icons/logo.ico'))
 
+        #print(f'printing from show {self.file_format}')
+
         # Initialize UI components
-        self.initUI(text)
+        self.initUI(text, file_format)
 
         # Initialize ZoomControl and create dock widgets
         self.zoom_control = ZoomControl(self)
@@ -35,7 +37,7 @@ class TextEditor(QMainWindow):
 
         self.initDockWidgets()
 
-    def initUI(self, text):
+    def initUI(self, text, file_format):
         # Main layout for QMainWindow
         main_layout = QHBoxLayout()
         main_widget = QWidget()
@@ -63,7 +65,7 @@ class TextEditor(QMainWindow):
         self.addToolBar(toolbar)
 
         # Initialize FileFunctions with toolbar and text_edit
-        self.file_functions = FileFunctions(toolbar, self.text_edit)
+        self.file_functions = FileFunctions(toolbar, self.text_edit, file_format)
         self.edit_functions = EditFunctions(toolbar, self.text_edit)
         self.options_functions = OptionsFunctions(toolbar, self.text_edit)
         self.tools_functions = ToolsFunctions(toolbar, self.text_edit)
@@ -166,13 +168,27 @@ class TextEditor(QMainWindow):
 
         # Set the pixmap as the background
         self.setStyleSheet(f"QMainWindow {{ background-image: url({background_image_path}); }}")
-        
+
+    def closeEvent(self, event: QCloseEvent):
+        reply = QMessageBox.question(self, 'Save Document', 
+                                     "Do you want to save your changes?", 
+                                     QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
+
+        if reply == QMessageBox.Yes:
+            self.file_functions.saveFile()
+            event.accept()  # Proceed with the closing
+        elif reply == QMessageBox.No:
+            event.accept()  # Proceed with the closing without saving
+        else:
+            event.ignore()  # Ignore the close event
+
 # Example usage
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
-    editor = TextEditor("i really wish i had a penguin named jim")
+    # Specify a default file format, e.g., '.txt'
+    editor = TextEditor("i really wish i had a penguin named jim", '.txt')
     editor.show()
     sys.exit(app.exec_())

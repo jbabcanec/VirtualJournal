@@ -7,7 +7,7 @@ from record import ChunkedSpeechRecorder
 import threading
 
 class LandingPage(QMainWindow):
-    proceedWithRecording = pyqtSignal(str)
+    proceedWithRecording = pyqtSignal(str, str)
 
     def __init__(self):
         super().__init__()
@@ -113,9 +113,11 @@ class LandingPage(QMainWindow):
         reply = QMessageBox.question(self, 'Recording', 'Continue with recording?',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            self.proceedWithRecording.emit(recognized_text)  # Emit the signal with the recorded text
+            # Emit the signal with the recorded text and the selected file format
+            selected_format = self.fileFormatDropdown.currentText()
+            self.proceedWithRecording.emit(recognized_text, selected_format)
         else:
-            self.resetUI()  # Reset the UI if the user chooses not to continue
+            self.resetUI()
 
     def on_recording_error(self):
         # Reset UI without showing any dialog and ensure no further action is taken

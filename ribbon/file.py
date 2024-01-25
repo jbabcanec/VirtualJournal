@@ -3,8 +3,9 @@
 from PyQt5.QtWidgets import QMenu, QToolButton, QAction, QMessageBox, QTextEdit, QFileDialog
 
 class FileFunctions:
-    def __init__(self, main_toolbar, text_edit: QTextEdit):
+    def __init__(self, main_toolbar, text_edit: QTextEdit, default_format='.txt'):
         self.text_edit = text_edit
+        self.default_format = default_format  # Store the default format
         self.setupFileMenu(main_toolbar)
 
     def setupFileMenu(self, main_toolbar):
@@ -55,11 +56,17 @@ class FileFunctions:
                 self.text_edit.setText(file.read())
 
     def saveFile(self):
-        # Save the current text to a file
-        filename, _ = QFileDialog.getSaveFileName(None, "Save File", "", "Text Files (*.txt);;All Files (*)")
+        print("Save File action triggered")  # Debug print
+        filter = f"Text Files (*{self.default_format});;All Files (*)"
+        filename, _ = QFileDialog.getSaveFileName(None, "Save File", "", filter)
+        print(f"Filename chosen: {filename}")  # Debug print
         if filename:
+            if not filename.lower().endswith(self.default_format):
+                filename += self.default_format
             with open(filename, 'w') as file:
                 file.write(self.text_edit.toPlainText())
+        else:
+            print("Save operation cancelled")  # Debug print
 
     def saveAsFile(self):
         # Save the current text to a new file location

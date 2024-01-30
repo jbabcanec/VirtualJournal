@@ -9,6 +9,7 @@ from utils.zoom import ZoomControl
 from utils.re_record import RecordControl
 from utils.reconcile import ReconcileControl
 from utils.text_edit import TextEditTools
+from utils.bottom_banner import BottomBanner
 
 # Import ribbon functionalities
 from ribbon.file import FileFunctions
@@ -25,17 +26,23 @@ class TextEditor(QMainWindow):
         self.setGeometry(100, 100, 1000, 800)
         self.setWindowIcon(QIcon('icons/logo.ico'))
 
-        #print(f'printing from show {self.file_format}')
+        # Initialize dock widgets at the very start
+        self.rightDock = QDockWidget("Tools", self)
+        self.leftDock = QDockWidget("Text Editing", self)
 
         # Initialize UI components
         self.initUI(text, file_format)
 
-        # Initialize ZoomControl and create dock widgets
+        # Initialize BottomBanner and add it to the status bar
+        self.initBottomBanner()
+
+        # Initialize ZoomControl, RecordControl, and ReconcileControl
         self.zoom_control = ZoomControl(self)
         self.record_control = RecordControl(self)
         self.reconcile_control = ReconcileControl(self)
 
         self.initDockWidgets()
+        self.text_edit.textChanged.connect(self.updateWordCount)
 
     def initUI(self, text, file_format):
         # Main layout for QMainWindow
@@ -68,7 +75,7 @@ class TextEditor(QMainWindow):
         self.file_functions = FileFunctions(toolbar, self.text_edit, file_format)
         self.edit_functions = EditFunctions(toolbar, self.text_edit)
         self.options_functions = OptionsFunctions(toolbar, self.text_edit)
-        self.tools_functions = ToolsFunctions(toolbar, self.text_edit)
+        self.tools_functions = ToolsFunctions(toolbar, self.text_edit, self)
         self.view_functions = ViewFunctions(toolbar, self.text_edit)
 
         # Add the paper frame to the main layout, centered
@@ -89,15 +96,13 @@ class TextEditor(QMainWindow):
         # --------------------------------------------------------
         # Right Dock Widget for Zoom, Record, and Reconcile Controls
         # --------------------------------------------------------
-        rightDock = QDockWidget("Right Tools", self)
-        rightDock.setAllowedAreas(Qt.RightDockWidgetArea)
-        rightDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
+        # Right Dock Widget for Zoom, Record, and Reconcile Controls
+        self.rightDock = QDockWidget("Tools", self)
+        self.rightDock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.rightDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
 
         # Layout for the right dock tools
         rightToolsLayout = QVBoxLayout()
-
-        # Add a stretch factor at the top
-        rightToolsLayout.addStretch()
 
         # Add zoom controls to the right tools layout
         zoomControls = self.zoom_control.create_controls()
@@ -111,7 +116,7 @@ class TextEditor(QMainWindow):
         reconcileControls = self.reconcile_control.create_controls()
         rightToolsLayout.addWidget(reconcileControls)
 
-        # Add a stretch factor at the bottom
+        # Add a stretch factor at the bottom to push everything up
         rightToolsLayout.addStretch()
 
         # Container widget for the right dock tools
@@ -119,15 +124,16 @@ class TextEditor(QMainWindow):
         rightContainerWidget.setLayout(rightToolsLayout)
         rightContainerWidget.setStyleSheet("QWidget { background: white; }")
 
-        rightDock.setWidget(rightContainerWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, rightDock)
+        self.rightDock.setWidget(rightContainerWidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.rightDock)
 
         # --------------------------------------------------------
         # Left Dock Widget for Text Editing Tools
         # --------------------------------------------------------
-        leftDock = QDockWidget("Text Editing Tools", self)
-        leftDock.setAllowedAreas(Qt.LeftDockWidgetArea)
-        leftDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
+        # Left Dock Widget for Text Editing Tools
+        self.leftDock = QDockWidget("Text Editing", self)
+        self.leftDock.setAllowedAreas(Qt.LeftDockWidgetArea)
+        self.leftDock.setStyleSheet("QDockWidget { background: white; border: 1px solid black;}")
 
         # Initialize TextEditTools with text_edit
         self.text_edit_tools = TextEditTools(self.text_edit)
@@ -139,8 +145,21 @@ class TextEditor(QMainWindow):
         textEditControls.setStyleSheet("QWidget { background: white; }")
 
         # Set the controls to the left dock widget
-        leftDock.setWidget(textEditControls)
-        self.addDockWidget(Qt.LeftDockWidgetArea, leftDock)
+        self.leftDock.setWidget(textEditControls)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.leftDock)
+
+    def initBottomBanner(self):
+        self.bottomBanner = BottomBanner(self)
+        self.statusBar().addPermanentWidget(self.bottomBanner)  # Add BottomBanner to the status bar
+
+        # Optionally, make the status bar opaque
+        self.statusBar().setStyleSheet("QStatusBar { background-color: rgba(255, 255, 255, 0.8); }")  # Adjust opacity as needed
+
+    def toggleRightDock(self):
+        self.rightDock.setVisible(not self.rightDock.isVisible())
+
+    def toggleLeftDock(self):
+        self.leftDock.setVisible(not self.leftDock.isVisible())
 
     def adjustZoom(self, change):
         self.zoomLevel += change
@@ -181,6 +200,11 @@ class TextEditor(QMainWindow):
             event.accept()  # Proceed with the closing without saving
         else:
             event.ignore()  # Ignore the close event
+
+    def updateWordCount(self):
+        text = self.text_edit.toPlainText()
+        word_count = len(text.split())
+        self.bottomBanner.updateWordCount(word_count)
 
 # Example usage
 if __name__ == "__main__":

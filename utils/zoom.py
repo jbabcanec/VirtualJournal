@@ -1,6 +1,9 @@
 # utils/zoom.py
 
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget
+import os
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QToolButton
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QSize, Qt
 
 class ZoomControl:
     def __init__(self, parent):
@@ -11,13 +14,9 @@ class ZoomControl:
         # Create a layout for the zoom buttons
         zoomLayout = QVBoxLayout()
 
-        # Create zoom in and zoom out buttons
-        zoomInButton = QPushButton("Zoom In (+)")
-        zoomOutButton = QPushButton("Zoom Out (-)")
-
-        # Connect buttons to their respective slots
-        zoomInButton.clicked.connect(lambda: self.adjust_zoom(10))
-        zoomOutButton.clicked.connect(lambda: self.adjust_zoom(-10))
+        # Create zoom in and zoom out buttons with icons and text
+        zoomInButton = self.create_icon_button("ZoomIn.png", "Zoom In", lambda: self.adjust_zoom(10))
+        zoomOutButton = self.create_icon_button("ZoomOut.png", "Zoom Out", lambda: self.adjust_zoom(-10))
 
         # Add buttons to the layout
         zoomLayout.addWidget(zoomInButton)
@@ -35,3 +34,15 @@ class ZoomControl:
         font = self.parent.text_edit.font()
         font.setPointSize(int(self.zoomLevel / 10))
         self.parent.text_edit.setFont(font)
+
+    def create_icon_button(self, icon_name, tooltip, callback):
+        dir_path = os.path.dirname(os.path.realpath(__file__))  # Get the directory of the current script
+        icon_path = os.path.join(dir_path, "..", "icons", icon_name)  # Construct the full path to the icon
+        button = QToolButton()
+        button.setText(tooltip)  # Set the button text
+        button.setIcon(QIcon(icon_path))
+        button.setIconSize(QSize(22, 22))  # Adjust icon size as needed
+        button.setToolTip(tooltip)
+        button.clicked.connect(callback)
+        button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)  # Set the button to display text beside the icon
+        return button

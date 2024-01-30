@@ -1,8 +1,12 @@
 # utils/reconcile.py
 
-from PyQt5.QtWidgets import QPushButton, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QTextEdit
+import os
+from PyQt5.QtWidgets import QWidget, QToolButton, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton  # Added QPushButton here
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QIcon
 import openai
 from correct import read_api_key, correct_text
+
 
 class CorrectionDialog(QDialog):
     def __init__(self, original_text, corrected_text, parent=None):
@@ -50,8 +54,14 @@ class ReconcileControl:
         self.api_key = read_api_key()
 
     def create_controls(self):
-        correctButton = QPushButton("Correct")
+        # Create a correct button with icon and text
+        correctButton = QToolButton()
+        correctButton.setText("Correct")
+        correctButton.setIcon(QIcon(self.get_icon_path("Correct.png")))  # Adjust the icon filename as necessary
+        correctButton.setIconSize(QSize(22, 22))  # Adjust icon size as needed
+        correctButton.setToolTip("Correct Text")  # Tooltip for the button
         correctButton.clicked.connect(self.correct_text)
+        correctButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)  # Set the button to display text beside the icon
         return correctButton
 
     def correct_text(self):
@@ -65,3 +75,7 @@ class ReconcileControl:
     def show_correction_dialog(self, original_text, corrected_text):
         correction_dialog = CorrectionDialog(original_text, corrected_text, self.parent)
         correction_dialog.exec_()
+
+    def get_icon_path(self, icon_name):
+        dir_path = os.path.dirname(os.path.realpath(__file__))  # Get the directory of the current script
+        return os.path.join(dir_path, "..", "icons", icon_name)  # Construct the full path to the icon

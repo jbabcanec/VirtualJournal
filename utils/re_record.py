@@ -1,7 +1,9 @@
 # utils/re_record.py
 
-from PyQt5.QtWidgets import QPushButton, QDialog, QVBoxLayout, QLabel
-from PyQt5.QtCore import QThread, pyqtSignal
+import os
+from PyQt5.QtWidgets import QToolButton, QDialog, QVBoxLayout, QLabel
+from PyQt5.QtCore import QThread, pyqtSignal, QSize, Qt
+from PyQt5.QtGui import QIcon
 from record import ChunkedSpeechRecorder
 
 class RecordingDialog(QDialog):
@@ -40,8 +42,14 @@ class RecordControl:
         self.recording_thread = None
 
     def create_controls(self):
-        recordButton = QPushButton("Record")
+        # Create a record button with icon and text
+        recordButton = QToolButton()
+        recordButton.setText("Record")
+        recordButton.setIcon(QIcon(self.get_icon_path("Record.png")))  # Adjust the icon filename as necessary
+        recordButton.setIconSize(QSize(22, 22))  # Adjust icon size as needed
+        recordButton.setToolTip("Start Recording")  # Tooltip for the button
         recordButton.clicked.connect(self.toggle_recording)
+        recordButton.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)  # Set the button to display text beside the icon
         return recordButton
 
     def toggle_recording(self):
@@ -68,3 +76,7 @@ class RecordControl:
     def on_recording_successful(self, text):
         print("Recorded Text:", text)  # Print the recorded text to the console
         self.parent.text_edit.insertPlainText(text)
+
+    def get_icon_path(self, icon_name):
+        dir_path = os.path.dirname(os.path.realpath(__file__))  # Get the directory of the current script
+        return os.path.join(dir_path, "..", "icons", icon_name)  # Construct the full path to the icon

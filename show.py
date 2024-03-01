@@ -10,6 +10,7 @@ from utils.re_record import RecordControl
 from utils.reconcile import ReconcileControl
 from utils.text_edit import TextEditTools
 from utils.bottom_banner import BottomBanner
+from utils.translate import TranslateControl
 
 # Import ribbon functionalities
 from ribbon.file import FileFunctions
@@ -40,6 +41,7 @@ class TextEditor(QMainWindow):
         self.zoom_control = ZoomControl(self)
         self.record_control = RecordControl(self)
         self.reconcile_control = ReconcileControl(self)
+        self.translate_control = TranslateControl(self)
 
         self.initDockWidgets()
         self.text_edit.textChanged.connect(self.updateWordCount)
@@ -66,17 +68,17 @@ class TextEditor(QMainWindow):
         self.text_edit.setReadOnly(False)
         paper_frame_layout.addWidget(self.text_edit)
 
-        # Create a toolbar
-        toolbar = QToolBar("Main Toolbar")
-        toolbar.setStyleSheet("background-color: white;")
-        self.addToolBar(toolbar)
+        # Create a toolbar and assign it to self.toolbar
+        self.toolbar = QToolBar("Main Toolbar")  # Changed from toolbar to self.toolbar
+        self.toolbar.setStyleSheet("background-color: white;")
+        self.addToolBar(self.toolbar)
 
-        # Initialize FileFunctions with toolbar and text_edit
-        self.file_functions = FileFunctions(toolbar, self.text_edit, file_format)
-        self.edit_functions = EditFunctions(toolbar, self.text_edit)
-        self.options_functions = OptionsFunctions(toolbar, self.text_edit)
-        self.tools_functions = ToolsFunctions(toolbar, self.text_edit, self)
-        self.view_functions = ViewFunctions(toolbar, self.text_edit)
+        # Initialize FileFunctions with self.toolbar and text_edit
+        self.file_functions = FileFunctions(self.toolbar, self.text_edit, file_format)
+        self.edit_functions = EditFunctions(self.toolbar, self.text_edit)
+        self.options_functions = OptionsFunctions(self.toolbar, self.text_edit)
+        self.tools_functions = ToolsFunctions(self.toolbar, self.text_edit, self)
+        self.view_functions = ViewFunctions(self.toolbar, self.text_edit)
 
         # Add the paper frame to the main layout, centered
         main_layout.addStretch()
@@ -115,6 +117,10 @@ class TextEditor(QMainWindow):
         # Add reconcile controls to the right tools layout
         reconcileControls = self.reconcile_control.create_controls()
         rightToolsLayout.addWidget(reconcileControls)
+
+        # Add translate controls to the right tools layout
+        translateControls = self.translate_control.create_controls()
+        rightToolsLayout.addWidget(translateControls)  # Adding translate button here
 
         # Add a stretch factor at the bottom to push everything up
         rightToolsLayout.addStretch()

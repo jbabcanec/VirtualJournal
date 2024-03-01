@@ -1,7 +1,7 @@
 # utils/re_record.py
 
 import os
-from PyQt5.QtWidgets import QToolButton, QDialog, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QToolButton, QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import QThread, pyqtSignal, QSize, Qt
 from PyQt5.QtGui import QIcon
 from record import ChunkedSpeechRecorder
